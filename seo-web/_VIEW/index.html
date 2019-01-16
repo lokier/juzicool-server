@@ -1,0 +1,77 @@
+#@layout()
+#define main()
+<!-- 内容容器 -->
+
+<h3>IpProxy</h3>
+IP_PROXY.DB文件路径: #(ip_proxy_file_path) <br/>
+Proxy个数：#(ipService.getDB().size())<br/>
+
+#if(ipService.isCollectFinish())
+<form action="ipservice?start=true" method="get">
+    <input type="submit" value="采集IP" />
+</form>
+#else
+<form action="ipservice?start=false" method="get">
+
+    <input type="submit" value="停止采集IP" />
+</form>
+#end
+
+<br/><br/>
+<h3>WebWalker</h3>
+<br/>
+线程个数: #(walkService.getMaxTaskThread()) <br/>
+正在执行flow个数: #(walkService.getRunningWorkFlowCount()) <br/>
+正在执行线程个数: #(walkService.getRunningThreadCount()) <br/>
+
+
+<table>
+    <tr>
+        <th> 计划ID</th>
+        <th> 下一个执行时间点</th>
+        <th> 任务名称</th>
+        <th>running</th>
+        <th>進度描述</th>
+        <th></th>
+
+
+    </tr>
+#for(schedule : walkService.getWalkFlowScheduleList())
+    <tr>
+        <td> #(schedule.getScheduleId())</td>
+        <td> #(com.juzicool.seo.util.SeoUtils::getNextTimeDesc(schedule.nextRunTime()))</td>
+        <td>#(schedule.getWalkFlowTask().getTaskName())</td>
+        <td> #(schedule.getWalkFlowTask().isRunning())</td>
+        <td> #(schedule.getWalkFlowTask().getProcessText())</td>
+        <td><a href="/walkTask?id=#(schedule.getWalkFlowTask().getTaskId())" target="_blank" >查看</a></td>
+
+
+
+    </tr>
+#end
+</table>
+
+
+<br/><br/>
+<h3>PromiseExecutor</h3>
+等待处理个数: #(promiseExecutor.getPenddingPromiseSize())
+正在执行个数: #(promiseExecutor.getRunningPromise().length)
+
+
+<table>
+    <tr>
+        <th> ID </th>
+        <th> 开始时间 </th>
+    </tr>
+    #for(promise : promiseExecutor.getRunningPromise())
+    <tr>
+        <td> #(promise.getId())</td>
+        <td> #(com.juzicool.seo.util.SeoUtils::getTimeDesc(promise.getStartTime()))</td>
+
+
+    </tr>
+    #end
+</table>
+
+#end
+
