@@ -1,0 +1,56 @@
+#@layout()
+#define headjs()
+<script>
+    function showDetail(id) {
+        var taskDialog = $("#dialog-log-detail-"+id);
+        taskDialog.dialog({
+            height: 600,
+            width: 800,
+            modal: true,
+            title: '日志详情',
+        })
+    }
+</script>
+#end
+
+
+#define main()
+<!-- 内容容器 -->
+<p>只保留10W条日志</p>
+<table>
+    <tr>
+        <td  style="width: 200px">时间</td>
+      <!--  <td> 等级</td>
+        <td> 有子日志</td>-->
+        <td> message</td>
+
+    </tr>
+#for(log : logList)
+    <tr>
+        <td> #(com.juzicool.flow.web.util.TimeUtils::getTimeDesc(log.createTime)) </td>
+  <!--      <td> #(log.level) </td>
+        <td> #(log.isHasSubLog()) </td>-->
+        <td>
+            #if(log.detailMessage!= null && log.detailMessage.length()>0)
+            <a href="javascript: showDetail(#(log.id))"> #(log.message) </a>
+
+                 <div id="dialog-log-detail-#(log.id)" style="display: none">
+                    <p>
+                        #(com.juzicool.flow.web.util.RenderUtils::toHtml(log.detailMessage))
+                    </p>
+                </div>
+            #else
+                #(log.message)
+            #end
+        </td>
+     <!--   <td>
+            #(com.juzicool.flow.web.util.RenderUtils::toHtml(log.detailMessage))
+        </td>
+-->
+    </tr>
+#end
+</table>
+
+
+#end
+

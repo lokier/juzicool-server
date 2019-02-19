@@ -1,0 +1,232 @@
+#@layout()
+
+#define headjs()
+<script>
+
+    $(function() {
+        var taskDialog =$( "#dialog-create-task-form" );
+            $( "#create-task" )
+            .button()
+            .click(function() {
+
+                $("#task-name").val('');
+                $("#task-name").removeAttr("disabled");
+                $("#task-taskClassName").val('');
+                taskDialog.dialog({
+                    height: 240,
+                    modal: true,
+                    title: '创建新工程',
+                    buttons: {
+                        "确认": function() {
+                            $.ajax({
+                                //几个参数需要注意一下
+                                type: "POST",//方法类型
+                                dataType: "json",//预期服务器返回的数据类型
+                                url: "/project/edit" ,//url
+                                data: $('#create-task-form').serialize(),
+                                success: function (result) {
+                                    console.log(result);//打印服务端返回的数据(调试用)
+
+                                    if (result.success == true) {
+                                        window.location.reload()
+                                        return;
+                                    }
+                                    alert(result.msg);
+
+                                },
+                                error : function() {
+                                    alert("异常！");
+                                }
+                            });
+                            //$( this ).dialog( "close" );
+                        },
+                        "取消": function() {
+                            $( this ).dialog( "close" );
+                        }
+                    }
+                });
+            });
+        taskDialog.hide();
+
+        $( "#setting" )
+            .button()
+            .click(function() {
+
+                $("#dialog-setting-form").dialog({
+                    height: 240,
+                    modal: true,
+                    title: '设置',
+                    buttons: {
+                        "确认": function() {
+                            $.ajax({
+                                //几个参数需要注意一下
+                                type: "POST",//方法类型
+                                dataType: "json",//预期服务器返回的数据类型
+                                url: "/setting" ,//url
+                                data: $('#setting-form').serialize(),
+                                success: function (result) {
+                                    console.log(result);//打印服务端返回的数据(调试用)
+
+                                    if (result.success == true) {
+                                        window.location.reload()
+                                        return;
+                                    }
+                                    alert(result.msg);
+
+                                },
+                                error : function() {
+                                    alert("异常！");
+                                }
+                            });
+                            //$( this ).dialog( "close" );
+                        },
+                        "取消": function() {
+                            $( this ).dialog( "close" );
+                        }
+                    }
+                });
+            });
+    });
+
+    function editTask(id,name,taskClassName) {
+        var taskDialog = $("#dialog-create-task-form");
+
+        $("#task-name").val(name);
+        $("#task-name").attr("disabled","disabled");
+        $("#task-taskClassName").val(taskClassName);
+        taskDialog.dialog({
+            height: 240,
+            width: 400,
+            modal: true,
+            title: '修改工程',
+            buttons: {
+                "确认": function () {
+                    $.ajax({
+                        //几个参数需要注意一下
+                        type: "POST",//方法类型
+                        dataType: "json",//预期服务器返回的数据类型
+                        url: "/project/edit",//url
+                        data: 'id='+id +'&name='+name+"&taskClassName="+$("#task-taskClassName").val(),
+                        success: function (result) {
+                            console.log(result);//打印服务端返回的数据(调试用)
+                            if (result.success == true) {
+                                window.location.reload()
+                                return;
+                            }
+                            alert(result.msg);
+
+                        },
+                        error: function () {
+                            alert("异常！");
+                        }
+                    });
+                    //$( this ).dialog( "close" );
+                },
+                "取消": function () {
+                    $(this).dialog("close");
+                }
+            }
+        })
+    }
+
+
+    function runTask(id,startup) {
+        $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/project/run" ,//url
+            data: 'id='+id+"&startup="+startup,
+            success: function (result) {
+                console.log(result);//打印服务端返回的数据(调试用)
+
+                if (result.success == true) {
+                    window.location.reload()
+                    return;
+                }
+                alert(result.msg);
+
+            },
+            error : function() {
+                alert("异常！");
+            }
+        });
+
+    }
+
+</script>
+
+#end
+
+#define main()
+<!-- 内容容器 -->
+
+目录路径:#(rootPath)<br/>
+Task目录:#(taskPath) <br/>
+
+<button id="create-task">创建新工程</button>
+<button id="setting">设置</button>
+
+<table>
+    <tr>
+        <th> 工程名称 </th>
+        <th> 程序 </th>
+        <th> 编辑</th>
+        <th> 状态</th>
+        <th> 运行</th>
+        <th> 运行信息</th>
+        <th> 存储信息</th>
+        <th>日志</th>
+    </tr>
+    #for(project : projectList)
+    <tr>
+        <td> #(project.name)</td>
+        <td> #(project.taskClassName)</td>
+        <td> <button id="bind-task" onclick="javascript:editTask(#(project.id),'#(project.name)','#(project.taskClassName)')">修改</button></td>
+        <td> #(project.getStatusInfo())</td>
+        <td>
+            #set( taskObject = project.getTask())
+            #if(taskObject)
+                 #if(taskObject.isRunning())
+                <button id="run-task" onclick="javascript:runTask(#(project.id),false)">关闭</button>
+                #else
+                <button id="run-task" onclick="javascript:runTask(#(project.id),true)">执行</button>
+                #end
+            #end
+        </td>
+        <td> #(project.getRunningInfo())</td>
+        <td>  #(com.juzicool.flow.web.util.ProjectUtils::getStorgeInfo(project))</td>
+        <td>
+            <a href="/project/logs?id=#(project.id)" target="_blank" >查看</a>
+
+        </td>
+
+    </tr>
+    #end
+</table>
+
+<div id="dialog-create-task-form"  title="创建新工程">
+    <form id="create-task-form" onsubmit="return false" action="##" method="post">
+        <label >工程名称</label>
+        <input type="text" name="name" id="task-name"/>
+        <br/>
+        <label >绑定程序</label>
+        <input type="text" name="taskClassName" id="task-taskClassName"/>
+
+    </form>
+</div>
+
+
+<div id="dialog-setting-form"  title="设置" style="display: none">
+    <form id="setting-form" onsubmit="return false" action="##" method="post">
+        <label >线程个数</label>
+        <input type="text" name="threadSize" id="threadSize" value="#(sys.get().getMainExecutor().getThreadSize())"/>
+        <br/>
+
+    </form>
+</div>
+
+
+
+#end
+
